@@ -12,31 +12,31 @@ Um microserviço simples para gerenciamento de produtos usando Node.js, gRPC e K
 ## 🏗️ Arquitetura de Deploy
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Kubernetes Cluster                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
+┌────────────────────────────────────────────────────────────────────┐
+│                        Kubernetes Cluster                          │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐ │
 │  │   Products      │    │  PostgreSQL     │    │  PostgreSQL     │ │
 │  │   Microservice  │◄──►│     Master      │◄──►│     Slave       │ │
 │  │   (gRPC)        │    │   (Write)       │    │   (Read)        │ │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘ │
-│           │                       │                       │       │
-│           ▼                       ▼                       ▼       │
+│           │                       │                       │        │
+│           ▼                       ▼                       ▼        │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐ │
 │  │   Products      │    │  postgres-      │    │  postgres-      │ │
 │  │   Service       │    │  write          │    │  read           │ │
 │  │   (50051)       │    │  Service        │    │  Service        │ │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘ │
-│           │                       │                       │       │
-│           ▼                       ▼                       ▼       │
+│           │                       │                       │        │
+│           ▼                       ▼                       ▼        │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐ │
 │  │   Products      │    │  postgres-      │    │  postgres-      │ │
 │  │   HPA           │    │  master-hpa     │    │  slave-hpa      │ │
 │  │   (1-10 pods)   │    │  (1-3 pods)     │    │  (1-5 pods)     │ │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘ │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 📊 Configurações Detalhadas
@@ -136,7 +136,7 @@ Você precisa ter instalado:
 
 ### 1. Clone o Projeto
 ```bash
-git clone <url-do-repositório>
+git clone git@github.com:trabalhomatheus/MS-produtos.git
 cd products-microservice
 ```
 
