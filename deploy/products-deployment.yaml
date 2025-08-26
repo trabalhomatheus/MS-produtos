@@ -14,6 +14,19 @@ spec:
       labels:
         app: products
     spec:
+      initContainers:
+        - name: wait-for-mongo
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "Aguardando MongoDB..."
+              until nc -z mongodb 27017; do
+                echo "MongoDB ainda não está pronto..."
+                sleep 2
+              done
+              echo "MongoDB está pronto!"
       containers:
         - name: products
           image: products-microservice:latest
@@ -21,6 +34,9 @@ spec:
           ports:
             - containerPort: 50051
               name: grpc
+          env:
+            - name: MONGO_URI
+              value: "mongodb://mongo:mongo@mongodb:27017/productsdb?authSource=admin"
           resources:
             requests:
               memory: "128Mi"

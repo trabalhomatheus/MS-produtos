@@ -5,28 +5,8 @@ metadata:
   name: products-microservice
 
 resources:
-  # Database PVCs
-  - db-pvc.yaml
-  - db-slave-pvc.yaml
-  
-  # Database Deployments
-  - db-deployment.yaml
-  - db-slave-deployment.yaml
-  
-  # Database Services
-  - db-service.yaml
-  - db-slave-service.yaml
-  - db-read-write-service.yaml
-  
-  # Application
-  - deployment.yaml
-  - service.yaml
-  
-  # Autoscalers
+  - mongodb-deployment.yaml
+  - mongodb-service.yaml
+  - products-deployment.yaml
+  - products-service.yaml
   - products-hpa.yaml
-  - postgres-master-hpa.yaml
-  - postgres-slave-hpa.yaml
-
-commonLabels:
-  app.kubernetes.io/name: products-microservice
-  app.kubernetes.io/version: v1.0.0

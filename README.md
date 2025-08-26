@@ -7,7 +7,7 @@ Um microserviço simples para gerenciamento de produtos usando Node.js, gRPC e K
 - **Microserviço gRPC**: Servidor que responde a requisições
 - **Hello World**: Endpoint básico para testar
 - **Kubernetes**: Deploy automatizado em cluster
-- **PostgreSQL**: Banco de dados master/slave
+- **MongoDB**: Banco de dados NoSQL
 
 ## 🏗️ Arquitetura de Deploy
 
@@ -16,25 +16,25 @@ Um microserviço simples para gerenciamento de produtos usando Node.js, gRPC e K
 │                        Kubernetes Cluster                          │
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐ │
-│  │   Products      │    │  PostgreSQL     │    │  PostgreSQL     │ │
-│  │   Microservice  │◄──►│     Master      │◄──►│     Slave       │ │
-│  │   (gRPC)        │    │   (Write)       │    │   (Read)        │ │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘ │
-│           │                       │                       │        │
-│           ▼                       ▼                       ▼        │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐ │
-│  │   Products      │    │  postgres-      │    │  postgres-      │ │
-│  │   Service       │    │  write          │    │  read           │ │
-│  │   (50051)       │    │  Service        │    │  Service        │ │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘ │
-│           │                       │                       │        │
-│           ▼                       ▼                       ▼        │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐ │
-│  │   Products      │    │  postgres-      │    │  postgres-      │ │
-│  │   HPA           │    │  master-hpa     │    │  slave-hpa      │ │
-│  │   (1-10 pods)   │    │  (1-3 pods)     │    │  (1-5 pods)     │ │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘ │
+│  ┌─────────────────┐    ┌─────────────────┐                        │
+│  │   Products      │    │   MongoDB       │                        │
+│  │   Microservice  │◄──►│   (ReplicaSet)  │                        │
+│  │   (gRPC)        │    │   (Read/Write)  │                        │
+│  └─────────────────┘    └─────────────────┘                        │
+│           │                       │                                │
+│           ▼                       ▼                                │
+│  ┌─────────────────┐    ┌─────────────────┐                        │
+│  │   Products      │    │  mongodb-       │                        │
+│  │   Service       │    │  service        │                        │
+│  │   (50051)       │    │  (27017)        │                        │
+│  └─────────────────┘    └─────────────────┘                        │
+│           │                       │                                │
+│           ▼                       ▼                                │
+│  ┌─────────────────┐    ┌─────────────────┐                        │
+│  │   Products      │    │  mongodb-hpa    │                        │
+│  │   HPA           │    │  (1-3 pods)     │                        │
+│  │   (1-10 pods)   │    └─────────────────┘                        │
+│  └─────────────────┘                                              │
 │                                                                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
@@ -63,64 +63,33 @@ Um microserviço simples para gerenciamento de produtos usando Node.js, gRPC e K
 - **Scale Up**: 60s stabilization, 15s period
 - **Scale Down**: 300s stabilization, 60s period
 
-### 🗄️ PostgreSQL Master
+### 🗄️ MongoDB
 
-#### Deployment (`db-deployment.yaml`)
+#### Deployment (`mongodb-deployment.yaml`)
 - **Replicas**: 1
-- **Imagem**: `postgres:16`
-- **Porta**: 5432
+- **Imagem**: `mongo:6`
+- **Porta**: 27017
 - **Recursos**: 250m-500m CPU, 256Mi-512Mi Memory
 - **Variáveis de Ambiente**:
-  - `POSTGRES_DB`: productsdb
-  - `POSTGRES_USER`: postgres
-  - `POSTGRES_PASSWORD`: postgres
+  - `MONGO_INITDB_DATABASE`: productsdb
+  - `MONGO_INITDB_ROOT_USERNAME`: mongo
+  - `MONGO_INITDB_ROOT_PASSWORD`: mongo
 
-#### Service (`db-service.yaml`)
+#### Service (`mongodb-service.yaml`)
 - **Tipo**: ClusterIP
-- **Porta**: 5432
-- **Seletor**: `app: postgres, role: master`
+- **Porta**: 27017
+- **Seletor**: `app: mongodb`
 
-#### PVC (`db-pvc.yaml`)
+#### PVC (`mongodb-pvc.yaml`)
 - **Storage**: 1Gi
 - **Access Mode**: ReadWriteOnce
 - **Storage Class**: standard
 
-#### HPA (`postgres-master-hpa.yaml`)
+#### HPA (`mongodb-hpa.yaml`)
 - **Min Replicas**: 1
 - **Max Replicas**: 3
 - **CPU Target**: 60%
 - **Memory Target**: 70%
-
-### 🗄️ PostgreSQL Slave
-
-#### Deployment (`db-slave-deployment.yaml`)
-- **Replicas**: 1
-- **Imagem**: `postgres:16`
-- **Porta**: 5432
-- **Recursos**: 250m-500m CPU, 256Mi-512Mi Memory
-- **Variáveis de Ambiente**: Mesmas do master
-
-#### Service (`db-slave-service.yaml`)
-- **Tipo**: ClusterIP
-- **Porta**: 5432
-- **Seletor**: `app: postgres, role: slave`
-
-#### PVC (`db-slave-pvc.yaml`)
-- **Storage**: 1Gi
-- **Access Mode**: ReadWriteOnce
-- **Storage Class**: standard
-
-#### HPA (`postgres-slave-hpa.yaml`)
-- **Min Replicas**: 1
-- **Max Replicas**: 5
-- **CPU Target**: 60%
-- **Memory Target**: 70%
-
-### 🔄 Services de Leitura/Escrita
-
-#### Read/Write Services (`db-read-write-service.yaml`)
-- **postgres-write**: Aponta para master (escritas)
-- **postgres-read**: Aponta para slave (leituras)
 
 ## ⚙️ Pré-requisitos
 
@@ -279,6 +248,37 @@ docker build -t products-microservice:latest .
 ### Pod não inicia
 ```bash
 # Ver logs do pod
+kubectl logs <nome-do-pod>
+
+# Verificar status
+kubectl describe pod <nome-do-pod>
+```
+
+### Port-forward não funciona
+```bash
+# Verificar se o serviço existe
+kubectl get service products
+
+# Verificar se o pod está rodando
+kubectl get pods -l app=products
+```
+
+## 📁 Estrutura do Projeto
+
+```
+products-microservice/
+├── src/
+│   ├── proto/products.proto    # Definição do serviço gRPC
+│   ├── services/               # Implementação dos serviços
+│   └── server.js              # Servidor principal
+├── deploy/                    # Arquivos Kubernetes
+│   ├── mongodb-deployment.yaml
+│   ├── mongodb-service.yaml
+│   ├── mongodb-pvc.yaml
+│   └── mongodb-hpa.yaml
+├── Dockerfile                 # Configuração Docker
+└── package.json              # Dependências Node.js
+```
 kubectl logs <nome-do-pod>
 
 # Verificar status

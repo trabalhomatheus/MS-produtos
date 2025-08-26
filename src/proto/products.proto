@@ -13,3 +13,61 @@ message HelloRequest {
 message HelloResponse {
   string message = 1;
 }
+
+service ProdutosService {
+  rpc CreateProduto (CreateProdutoRequest) returns (ProdutoResponse);
+  rpc GetProduto (GetProdutoRequest) returns (ProdutoResponse);
+  rpc UpdateProduto (UpdateProdutoRequest) returns (ProdutoResponse);
+  rpc DeleteProduto (DeleteProdutoRequest) returns (DeleteProdutoResponse);
+  rpc ListProdutos (ListProdutosRequest) returns (ListProdutosResponse);
+}
+
+message Produto {
+  string id = 1;
+  string nomeProduto = 2;
+  string descricao = 3;
+  int32 qtdEstoque = 4;
+  float preco = 5;
+  string categoria = 6;
+  string dataCriacao = 7;
+  string dataAtualizacao = 8;
+}
+
+message CreateProdutoRequest {
+  string nomeProduto = 1;
+  string descricao = 2;
+  int32 qtdEstoque = 3;
+  float preco = 4;
+  string categoria = 5;
+}
+
+message ProdutoResponse {
+  Produto produto = 1;
+}
+
+message GetProdutoRequest {
+  string id = 1;
+}
+
+message UpdateProdutoRequest {
+  string id = 1;
+  string nomeProduto = 2;
+  string descricao = 3;
+  int32 qtdEstoque = 4;
+  float preco = 5;
+  string categoria = 6;
+}
+
+message DeleteProdutoRequest {
+  string id = 1;
+}
+
+message DeleteProdutoResponse {
+  bool success = 1;
+}
+
+message ListProdutosRequest {}
+
+message ListProdutosResponse {
+  repeated Produto produtos = 1;
+}
