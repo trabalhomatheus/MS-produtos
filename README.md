@@ -34,7 +34,7 @@ Um microserviço simples para gerenciamento de produtos usando Node.js, gRPC e K
 │  │   Products      │    │  mongodb-hpa    │                        │
 │  │   HPA           │    │  (1-3 pods)     │                        │
 │  │   (1-10 pods)   │    └─────────────────┘                        │
-│  └─────────────────┘                                              │
+│  └─────────────────┘                                               │
 │                                                                    │
 └────────────────────────────────────────────────────────────────────┘
 ```
